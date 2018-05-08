@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Data.SqlClient;
+using Newtonsoft.Json;
 
 namespace DemoApp.SqlDemo
 {
@@ -12,11 +13,37 @@ namespace DemoApp.SqlDemo
     {
         static void Main(string[] args)
         {
+            GetAllGenres();
             //MakeDatabaseRequestScalar().Wait();
-            MakeDatabaseRequestCreateGenre().Wait();
+            //MakeDatabaseRequestCreateGenre().Wait();
             //MakeHttpRequest().Wait();
-
             Console.ReadLine();
+        }
+
+        static void GetAllGenres()
+        {
+            string query = "select * from Genres";
+            string connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MusicDb;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            var connection = new SqlConnection(connectionString);
+            connection.Open();
+            var command = new SqlCommand(query, connection);
+            var reader = command.ExecuteReader();
+            var genres = new List<Genre>();
+            while(reader.Read())
+            {
+                var id = (int)reader["Id"];
+                var name = (string)reader[1];
+                var genre = new Genre
+                {
+                    Id = id,
+                    Name = name
+                };
+                genres.Add(genre);
+            }
+            connection.Close();
+            //var json = JsonConvert.SerializeObject(genres,Formatting.Indented);
+            var json = JsonConvert.SerializeObject(genres);
+            Console.WriteLine(json);
         }
 
         private static async Task MakeDatabaseRequestScalar()
