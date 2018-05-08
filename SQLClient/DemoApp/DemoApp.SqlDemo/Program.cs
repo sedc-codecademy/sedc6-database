@@ -13,11 +13,53 @@ namespace DemoApp.SqlDemo
     {
         static void Main(string[] args)
         {
-            GetAllGenres();
+            while (true)
+            {
+                Console.Write("Enter Id of the genre: ");
+                GetGenreById(Console.ReadLine());
+            }
+            //ExecuteScalar:
+            // used to get result from aggregate functions such as count(), sum(), max(), min(), avg()
             //MakeDatabaseRequestScalar().Wait();
+
+            //ExecuteNonQuery:
+            //  result from insert, update, delete queries
+            // used to get number of rows affected
             //MakeDatabaseRequestCreateGenre().Wait();
+
+            //ExecuteReader
+            //  used to get actual quried records
+
             //MakeHttpRequest().Wait();
             Console.ReadLine();
+        }
+
+        static void GetGenreById(string ID)
+        {
+            string query = "select * from Genres as g where g.Id = @Id";
+            string connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MusicDb;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            var connection = new SqlConnection(connectionString);
+            connection.Open();
+            var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", ID);
+            var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                var id = (int)reader["Id"];
+                var name = (string)reader[1];
+                var genre = new Genre
+                {
+                    Id = id,
+                    Name = name
+                };
+                var json = JsonConvert.SerializeObject(genre, Formatting.Indented);
+                Console.WriteLine(json);
+            }
+            else
+            {
+                Console.WriteLine("genre was not found");
+            }
+            connection.Close();
         }
 
         static void GetAllGenres()
@@ -29,7 +71,7 @@ namespace DemoApp.SqlDemo
             var command = new SqlCommand(query, connection);
             var reader = command.ExecuteReader();
             var genres = new List<Genre>();
-            while(reader.Read())
+            while (reader.Read())
             {
                 var id = (int)reader["Id"];
                 var name = (string)reader[1];
